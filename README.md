@@ -35,7 +35,7 @@ go run main.go <address:port>
 You can specify the IP addresses that are allowed to connect to the server by adding them to the whitelist slice in the main function:
 
 ```bash
-whitelist := []string{"196.177.55.235", "196.179.246.130"}
+whitelist := []string{"193.*.*.*", "196.*.*.*"}
 ```
 
 ## Running the Server
