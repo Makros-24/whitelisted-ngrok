@@ -1,0 +1,12 @@
+smtp:
+  username: example@gmail.com
+  password: password
+  server:
+    host: smtp.gmail.com
+    port: 587
+notification:
+  url:
+    recipients: example@yopmail.com
+
+  warnings:
+    recipients: example@yopmail.com
