@@ -1,48 +1,16 @@
-package main
+package ngrokautomator
 
 import (
 	"context"
-	"github.com/go-mail/mail"
+	"github.com/spf13/viper"
 	"golang.ngrok.com/ngrok"
 	"golang.ngrok.com/ngrok/config"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"log"
 	"net"
-	"os"
 	"strings"
 )
-
-func usage(bin string) {
-	log.Fatalf("Usage: %s <address:port>", bin)
-}
-
-func main() {
-	if len(os.Args) != 2 {
-		usage(os.Args[0])
-	}
-	if err := run(context.Background(), os.Args[1], []string{"ip1.*.*.*", "ip2.*.*.*"}); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func sendMail(url string) error {
-	m := mail.NewMessage()
-
-	m.SetHeader("From", "makros.server@example.com")
-	m.SetHeader("To", "makros@example.com")
-	m.SetHeader("Subject", "Home Server")
-	m.SetBody("text/html", "    <p>Hello,</p>\n    <p>Here is the link you requested:</p>\n    <a href=\""+url+"\">Click here to access the URL</a>\n    <p>If you have any questions or need further assistance, please hesitate to contact me, here is my fake number 25311184.</p>\n    <p>Best regards,</p>\n    <p>Your Name</p>")
-
-	d := mail.NewDialer("smtp.gmail.com", 587, "makros.server@example.com", "passwordexample")
-
-	if err := d.DialAndSend(m); err != nil {
-
-		panic(err)
-		return err
-	}
-	return nil
-}
 
 func checkWhitelist(whitelist []string, remoteIP string) bool {
 	var isIPInWhitelist bool
@@ -55,9 +23,9 @@ func checkWhitelist(whitelist []string, remoteIP string) bool {
 	return isIPInWhitelist
 }
 
-func run(ctx context.Context, dest string, whitelist []string) error {
+func Run(ctx context.Context, dest string, whitelist []string) error {
 	tun, ngrokListenerError := ngrok.Listen(ctx,
-		config.HTTPEndpoint(),
+		config.TCPEndpoint(),
 		ngrok.WithAuthtokenFromEnv(),
 	)
 
@@ -67,7 +35,20 @@ func run(ctx context.Context, dest string, whitelist []string) error {
 
 	log.Println("tunnel created:", tun.URL())
 
-	mailError := sendMail(tun.URL())
+	mailError := sendNewUrl(
+		Email{
+			sender:     viper.GetString("smtp.username"),
+			recipients: viper.GetString("notification.url.recipients"),
+			variables:  []string{tun.URL()},
+		},
+		SmtpConfig{
+			server:   viper.GetString("smtp.server.host"),
+			port:     viper.GetInt("smtp.server.port"),
+			username: viper.GetString("smtp.username"),
+			password: viper.GetString("smtp.password"),
+		},
+	)
+
 	if mailError != nil {
 		return mailError
 	}
