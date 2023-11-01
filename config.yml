@@ -1,3 +1,5 @@
+ngrok:
+  token: your_auth_token
 smtp:
   username: example@gmail.com
   password: password
