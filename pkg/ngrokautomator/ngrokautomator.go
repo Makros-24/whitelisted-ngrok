@@ -26,7 +26,7 @@ func checkWhitelist(whitelist []string, remoteIP string) bool {
 func Run(ctx context.Context, dest string, whitelist []string) error {
 	tun, ngrokListenerError := ngrok.Listen(ctx,
 		config.TCPEndpoint(),
-		ngrok.WithAuthtokenFromEnv(),
+		ngrok.WithAuthtoken(viper.GetString("ngrok.token")),
 	)
 
 	if ngrokListenerError != nil {
