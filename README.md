@@ -26,6 +26,12 @@ alternatively, you install required dependencies manually using the following co
 go mod tidy
 ```
 
+## Building
+
+```bash
+go build main.go
+```
+
 ## Configuration
 Make sure to set the following environment variables for ngrok:
 
