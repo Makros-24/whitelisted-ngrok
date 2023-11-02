@@ -7,7 +7,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "ngrokautomator",
+	Use:   "ngka",
 	Short: "ngrokautomator - a simple CLI to run ngrok with whitelist and many other features",
 	Args:  cobra.ExactArgs(2),
 
