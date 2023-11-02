@@ -23,9 +23,9 @@ func checkWhitelist(whitelist []string, remoteIP string) bool {
 	return isIPInWhitelist
 }
 
-func Run(ctx context.Context, dest string, whitelist []string) error {
+func Run(ctx context.Context, dest string, whitelist []string, tunnelType config.Tunnel) error {
 	tun, ngrokListenerError := ngrok.Listen(ctx,
-		config.TCPEndpoint(),
+		tunnelType,
 		ngrok.WithAuthtoken(viper.GetString("ngrok.token")),
 	)
 
@@ -35,22 +35,24 @@ func Run(ctx context.Context, dest string, whitelist []string) error {
 
 	log.Println("tunnel created:", tun.URL())
 
-	mailError := sendNewUrl(
-		Email{
-			sender:     viper.GetString("smtp.username"),
-			recipients: viper.GetString("notification.url.recipients"),
-			variables:  []string{tun.URL()},
-		},
-		SmtpConfig{
-			server:   viper.GetString("smtp.server.host"),
-			port:     viper.GetInt("smtp.server.port"),
-			username: viper.GetString("smtp.username"),
-			password: viper.GetString("smtp.password"),
-		},
-	)
+	if viper.GetBool("notification.active") {
+		mailError := sendNewUrl(
+			Email{
+				sender:     viper.GetString("smtp.username"),
+				recipients: viper.GetString("notification.url.recipients"),
+				variables:  []string{tun.URL()},
+			},
+			SmtpConfig{
+				server:   viper.GetString("smtp.server.host"),
+				port:     viper.GetInt("smtp.server.port"),
+				username: viper.GetString("smtp.username"),
+				password: viper.GetString("smtp.password"),
+			},
+		)
 
-	if mailError != nil {
-		return mailError
+		if mailError != nil {
+			return mailError
+		}
 	}
 
 	for {

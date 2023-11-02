@@ -8,8 +8,8 @@ import (
 	"ngrokautomator/pkg/ngrokautomator"
 )
 
-var tcpTunnel = &cobra.Command{
-	Use: "tcp",
+var httpTunnel = &cobra.Command{
+	Use: "http",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			log.Fatalf("Usage: %s <address:port>", args[0])
@@ -19,14 +19,14 @@ var tcpTunnel = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		if err := ngrokautomator.Run(context.Background(), args[0], whitelist, config.TCPEndpoint()); err != nil {
+		if err := ngrokautomator.Run(context.Background(), args[0], whitelist, config.HTTPEndpoint()); err != nil {
 			log.Fatal(err)
 		}
 	},
 }
 
 func init() {
-	tcpTunnel.Flags().StringArrayP("whitelist", "w", []string{}, "Whitelist for connecting IP addresses")
-	_ = tcpTunnel.MarkFlagRequired("whitelist")
-	rootCmd.AddCommand(tcpTunnel)
+	httpTunnel.Flags().StringArrayP("whitelist", "w", []string{}, "Whitelist for connecting IP addresses")
+	_ = httpTunnel.MarkFlagRequired("whitelist")
+	rootCmd.AddCommand(httpTunnel)
 }
