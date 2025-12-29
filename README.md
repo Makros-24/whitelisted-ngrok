@@ -1,4 +1,3 @@
-#### [WORK IN PROGRESS] 
 # NGROK Whitelist Server
 
 This is a Go application for creating a ngrok tunnel with the option of specifying a whitelist. The server only accepts connections from whitelisted IP addresses and forwards them to a specified destination. Additionally, it could send an email with the ngrok URL when a tunnel is established.
