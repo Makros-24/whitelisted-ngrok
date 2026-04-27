@@ -20,6 +20,9 @@
 # Go workspace file
 go.work
 
+# Local config (may contain secrets)
+config.yml
+
 # Default ignored files
 /shelf/
 /workspace.xml

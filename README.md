@@ -1,66 +1,93 @@
-# NGROK Whitelist Server
+# ngka — Whitelisted ngrok Tunnels
 
-This is a Go application for creating a ngrok tunnel with the option of specifying a whitelist. The server only accepts connections from whitelisted IP addresses and forwards them to a specified destination. Additionally, it could send an email with the ngrok URL when a tunnel is established.
+A CLI tool that creates [ngrok](https://ngrok.com/) tunnels with IP whitelisting. Only connections from whitelisted IP addresses are forwarded to the destination; all others are rejected. Supports both TCP and HTTP tunnel types, with optional email notifications when a tunnel URL is created.
 
 ## Prerequisites
 
-Before running this application, you need to have the following prerequisites installed:
-
-- Go (Golang) version
-- The `go-mail` library for sending notifications
-- The `ngrok` library creating tunnels
-- The `cobra` library for cli
-- The `viper` library for configuration
-- A ngrok account and authentication token
+- Go 1.21+
+- A [ngrok account](https://dashboard.ngrok.com/signup) and authentication token
 
 ## Installation
 
-To install all the required dependencies, you can use:
 ```bash
-go get [packages]
-```
-
-alternatively, you install required dependencies manually using the following commands:
-```bash
+git clone https://github.com/Makros-24/whitelisted-ngrok.git
+cd whitelisted-ngrok
 go mod tidy
-```
-
-## Building
-
-```bash
-go build main.go
+go build -o ngka .
 ```
 
 ## Configuration
-Make sure to set the following environment variables for ngrok:
 
-ngrok.token: Your ngrok authentication token
-notification.active: Whether to send an email notification when a tunnel is established if so the next configurations must be specified
-    smtp.username: Your email username
-    smtp.password: Your email password
-    smtp.server.host: smtp.server.com
-    smtp.server.port: ex:587
+Edit `config.yml` with your values before running:
 
+```yaml
+ngrok:
+  token: your_ngrok_auth_token
+
+smtp:
+  username: you@gmail.com
+  password: your_app_password
+  server:
+    host: smtp.gmail.com
+    port: 587
+
+notification:
+  active: false
+  url:
+    recipients: notify@example.com
+```
+
+| Key | Required | Description |
+|-----|----------|-------------|
+| `ngrok.token` | Yes | Your ngrok authentication token |
+| `notification.active` | No (default: `false`) | Send an email when a tunnel URL is created |
+| `smtp.*` | Only when `notification.active: true` | SMTP credentials for email delivery |
+| `notification.url.recipients` | Only when `notification.active: true` | Recipient email address |
+
+> **Note:** `config.yml` is listed in `.gitignore` — do not rename it or you risk committing credentials.
 
 ## Usage
-```bash
-go run main.go tcp <address:port> 
-```
 
-<address:port> The destination address and port where the connections will be forwarded.
-
-## Whitelist
-You can specify the IP addresses that are allowed to connect to the server by adding them to the whitelist slice in the main function:
+### TCP tunnel
 
 ```bash
--w <ip-address-1> -w <ip-address-n> 
+./ngka tcp -w <ip1> [-w <ip2> ...] <address:port>
 ```
 
-## Running the Server
-Run the server with the command mentioned in the "Usage" section. It will create an ngrok tunnel and start listening for incoming connections from whitelisted IP addresses.
+### HTTP tunnel
 
-## Handling Connections
-The server will accept incoming connections and forward them to the specified destination. If an IP address is not in the whitelist, the connection will be refused.
+```bash
+./ngka http -w <ip1> [-w <ip2> ...] <address:port>
+```
+
+### Flags
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--whitelist` | `-w` | IP address allowed to connect (repeatable, required) |
+
+### Examples
+
+Expose a local SSH server, only reachable from one IP:
+
+```bash
+./ngka tcp -w 203.0.113.42 localhost:22
+```
+
+Expose a local web server to two IPs:
+
+```bash
+./ngka http -w 203.0.113.42 -w 198.51.100.7 localhost:8080
+```
+
+## How it works
+
+1. An ngrok tunnel is created using your auth token.
+2. The tunnel URL is logged (and emailed if notifications are enabled).
+3. For each incoming connection, the remote IP is checked against the whitelist.
+   - **Allowed:** the connection is proxied transparently to `<address:port>`.
+   - **Rejected:** the connection is closed immediately.
 
 ## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+
+MIT — see [LICENSE](LICENSE).
